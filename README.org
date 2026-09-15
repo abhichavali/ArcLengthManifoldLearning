@@ -1,0 +1,9 @@
+#+TITLE: Arc Length Manifold Learning
+
+Manifold learning using arc length along data manifolds as the intrinsic coordinate.
+
+* Files
+- [[file:ManifoldLearner.org][ManifoldLearner.org]] :: Notes, derivations, and literate implementation.
+
+* Status
+Early work in progress.
