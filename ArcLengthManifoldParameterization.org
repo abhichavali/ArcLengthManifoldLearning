@@ -1,0 +1,74 @@
+#+TITLE: 1D Arc Length Reparameterization 
+
+* Abstract
+Parameterizing a sampled 1D manifold (1D intrinsic dimension) via approximate arclength can allow you to leverage the computational efficiency of the FFT to find the eigenfunctions on a manifold. This method is a direct replacement for Diffusion Maps in 1D. 
+
+* Background
+
+** The Task
+The task is learning a good coordinate system for a manifold and the functions defined over it. Imagine we have a manifold, sampled in some high ambient dimension, with an intrinsic dimension of 1. This could be a parametrically defined curve. For example:  
+
+\begin{align}
+r(\theta) &= 2 + b \cos \theta \\
+x(\theta) &= r(\theta) \cos(\theta) \\
+y(\theta) &= r(\theta) \sin(\theta) \\
+\gamma(\theta) &= (x(\theta), y(\theta))
+\end{align}
+
+We could also have a manifold with some high ambient dimension that doesn't have a clear continuous representation. We are only given discrete samples. Our goal is to find a single spectral basis which is both:
+- A spectral basis for the manifold. In this basis, we are able to define an "embedding dimension" of size ~k~, where we map points from the ambient space into the embedding space. Using too few modes can lead to loss/blurring of information, whereas too many modes can amplify sampling noise, etc.
+
+- A spectral  for functions defined over this manifold. For a function 
+$f: M \to \mathbb{R}$, we want a complete basis which superposition can allow to represent in this basis. Although there are many such bases, we prefer to use the Eigenfunctions of the Laplace-Beltrami Operator on that manifold. This operator measures variation according to the manifold's own geometry, and its eigenfunctions are naturally ordered
+
+The traditional tool to do this has been Diffusion Maps, which can find the eigenfunctions of Laplace-Beltrami of a sampled manifold in $O(n^3)$ however this project proposes using an arc length parameterization and an FFT to find eigenfunctions of the Laplace-Beltrami Operator. Then, we will use this basis to approximate a function ~f~ on a manifold, its deriative, and its integral. 
+
+Ultimately, we will get a faster way to approximate functions on a 1D manifold, as well as their integrals and derivatives. This result uses the proof that in a 1D manifold, the eigenfunctions of Laplace-Beltrami are Warped Fourier Modes, with an arc length warp.
+** Diffusion Maps in 1D
+
+
+** Arc Length Parameterization
+
+* Numerical Experiment
+
+** Setup
+
+1) Sample points in \(\mathbb{R}^2\)
+
+\begin{align}
+r(\theta) &= 2 + b \cos(k\theta) \\
+x(\theta) &= r(\theta)\cos(\theta) \\
+y(\theta) &= r(\theta)\sin(\theta)
+\end{align}
+
+Sampling function: \(\gamma(\theta) = (x(\theta), y(\theta))\)
+
+\(P_0, P_1, \ldots, P_N \in \mathbb{R}^2\)
+
+2) Cumulative chord lengths
+
+\(t_0 = 0\), \(t_i = \sum_{j=1}^{i} \|P_j - P_{j-1}\|\) → Euclidean distance
+
+Pair each cumulative chord length with corresponding \((t_i, P_i)\) pairs.
+
+3) Fit continuous vector valued B-spline through pairs
+
+\((t_i, P_i)\), \(\hat{\gamma}(t_i) = P_i\)
+
+4) Compute arc length along fitted curve
+
+\(\hat{s}(t) = \int_0^t \|\hat{\gamma}'(\tau)\|\, d\tau\)
+
+*Original chord length parameter is only approx. arc length. Fully integrating velocity is better.
+
+5) Define arc length parameterized modes
+
+\(\hat{\phi}_k(\hat{\gamma}(t)) = e^{2\pi i k \hat{s}(t)/L}\)
+
+*L is total length
+
+* Analysis
+
+** Runtime Complexity
+
+
