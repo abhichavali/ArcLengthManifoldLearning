@@ -1,0 +1,48 @@
+#+TITLE: Arc-length Fourier vs diffusion maps: runtime to approximate temp()
+#+DATE: 2026-09-21
+
+* Setup
+Same point cloud as =src/arc_length_param.py=: N=200 samples of r(θ)=2+2cos(3θ),
+eps=0 (regular grid), target function =temp()= (Gaussian hot blob on one petal).
+Both methods get the same budget of 17 real coefficients (DC + 8 cos + 8 sin, i.e.
+=k_max=8= in the FFT, 17 eigenvectors in diffusion maps).
+
+- Arc-length FFT :: chord lengths → B-spline → arc length ŝ → spline resample f on
+  uniform ŝ grid → rFFT, keep k≤8 → irFFT → interp back to samples. O(N log N).
+- Diffusion maps :: dense Gaussian kernel (ε = median squared distance), α=1
+  Laplace-Beltrami normalization, full symmetric eigendecomposition, weighted
+  least-squares projection of f onto the top 17 eigenvectors. O(N³) eigensolve.
+
+Script: =src/1D-Laplace-Beltrami/arc_length_vs_d_map.py= (median of 20 runs, Apple Silicon,
+numpy 2.5.3 / scipy 1.18.1). Run with =.venv/bin/python src/1D-Laplace-Beltrami/arc_length_vs_d_map.py=.
+
+* Results (N=200)
+| method         | median ms | min ms | RMSE   | max abs err |
+|----------------+-----------+--------+--------+-------------|
+| arc-length FFT |     0.178 |  0.169 | 0.1452 |      0.4798 |
+| diffusion maps |     2.201 |  2.145 | 0.0207 |      0.0362 |
+
+Arc-length is ~12x faster at N=200.
+
+* Scaling
+| N    | arc-length ms | diffusion ms | ratio |
+|------+---------------+--------------+-------|
+| 200  |         0.176 |        2.255 |  12.8 |
+| 400  |         0.238 |        9.498 |  39.9 |
+| 800  |         0.304 |       47.602 | 156.6 |
+| 1600 |         0.481 |      282.466 | 587.9 |
+
+Diffusion maps grows ~N³ (×6 per doubling), arc-length grows roughly linearly.
+
+* Caveats
+- Diffusion maps wins on accuracy here, but it is an /in-sample/ least-squares fit
+  on data-adapted eigenvectors. The arc-length path pays for a spline resample
+  and a linear interp back to the samples, which is where most of its 0.15 RMSE
+  comes from, not from the Fourier truncation.
+- Diffusion maps has a kernel bandwidth ε to tune; the median heuristic worked
+  here but is not free in general. Arc-length has no free parameter.
+- A sparse kNN kernel + Lanczos (=scipy.sparse.linalg.eigsh=) would cut the
+  diffusion cost to roughly O(N k) per eigenvector, but still leaves the
+  arc-length pipeline an order of magnitude cheaper at these sizes.
+- Arc-length only applies to 1D manifolds with a known ordering; diffusion maps
+  does not need the ordering and generalizes to d>1.
