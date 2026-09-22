@@ -113,6 +113,15 @@ def run():
     arc_length_param_viz.show_function(f, f_hat, f_reg, dict(
         warp_rmse=warp_rmse, warp_max=warp_max, reg_rmse=reg_rmse, reg_max=reg_max,
     ))
+    
+    # 7. Approximate Derivative and Integral of Function
+    # Derivative and Integral from Fourier is trivial
+    # n = len(vals)
+    # L = s_hat[-1]
+    # F = np.fft.rfft()
+    # g_prime =  
+     
+    
     serve()
 
 
